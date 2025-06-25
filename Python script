@@ -1,0 +1,117 @@
+import tkinter
+from tkinter import *
+from tkinter import messagebox
+import data_collection
+from pygame import mixer
+import inference
+
+class MyDialog:
+    obj_flag = False
+
+    def __init__(self, parent):
+        if not MyDialog.obj_flag:
+            MyDialog.obj_flag = True
+            top = self.top = Toplevel(parent)
+            Label(top, text="Enter Name:").pack(pady=5)
+            self.name = None
+            self.e = Entry(top)
+            self.e.pack(pady=5)
+
+            b = Button(top, text="OK", command=self.ok)
+            b.pack(pady=5)
+            MyDialog.obj_flag = False
+
+    def ok(self):
+        self.name = self.e.get()
+        self.top.destroy()
+
+    def get_name(self):
+        return self.name
+
+
+def close_button_callback():
+    mainwindow.destroy()
+
+
+def collection_callback():
+    button_off()
+    toplevel_window = MyDialog(mainwindow)
+    mainwindow.wait_window(toplevel_window.top)
+    name = toplevel_window.get_name()
+    if not name:
+        messagebox.showerror("INPUT ERROR", "Please enter a valid name.")
+    else:
+        try:
+            print(f"Name entered: {name}")
+            data_collection.data_collection(name=name)
+        except Exception as e:
+            messagebox.showerror("ERROR", f"Data collection failed: {e}")
+    button_on()
+
+
+def training_callback():
+    try:
+        button_off()
+        # Assuming data_training.py has a function train_model
+        from data_training import train_model
+        train_model()
+        messagebox.showinfo("SUCCESS", "Model training completed successfully!")
+    except Exception as e:
+        messagebox.showerror("ERROR", f"Model training failed: {e}")
+    finally:
+        button_on()
+
+
+def inference_callback():
+    while True:
+        try:
+            if messagebox.askyesno(message="Do you want to check again?"):
+                button_off()
+                inference.inference()
+            else:
+                break
+        except Exception as e:
+            messagebox.showerror("ERROR", f"Inference failed: {e}")
+        finally:
+            button_on()
+
+
+def button_off():
+    collections_button.config(state=DISABLED)
+    training_button.config(state=DISABLED)
+    inference_button.config(state=DISABLED)
+    close_button.config(state=DISABLED)
+
+
+def button_on():
+    collections_button.config(state=NORMAL)
+    training_button.config(state=NORMAL)
+    inference_button.config(state=NORMAL)
+    close_button.config(state=NORMAL)
+
+
+mainwindow = tkinter.Tk()
+mainwindow.title('Emotion Detection Music Player')
+mainwindow.geometry('720x480')
+
+# Main Frame
+MAINFRAME = Frame(mainwindow, bg='white')
+MAINFRAME.pack(fill=BOTH, expand=True)
+
+# Button Frame
+button_frame = Frame(MAINFRAME, bg='white')
+button_frame.pack(pady=20)
+
+# Buttons
+collections_button = Button(button_frame, text="Data Collection", command=collection_callback, bg="cyan", width=20)
+training_button = Button(button_frame, text="Train the Data", command=training_callback, bg="cyan", width=20)
+inference_button = Button(button_frame, text="Run Inference", command=inference_callback, bg="green", width=20)
+close_button = Button(button_frame, text="Close", command=close_button_callback, bg="red", width=20)
+
+# Packing Buttons
+collections_button.grid(row=0, column=0, padx=10, pady=10)
+training_button.grid(row=0, column=1, padx=10, pady=10)
+inference_button.grid(row=1, column=0, padx=10, pady=10)
+close_button.grid(row=1, column=1, padx=10, pady=10)
+
+mainwindow.mainloop() 
